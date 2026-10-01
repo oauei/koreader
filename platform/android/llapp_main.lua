@@ -29,4 +29,11 @@ else
     arg = {file}
 end
 
-dofile(android.dir.."/reader.lua")
+local ok, err = xpcall(function()
+    dofile(android.dir.."/reader.lua")
+end, debug.traceback)
+if not ok then
+    local err_str = tostring(err)
+    android.LOGE("Error in reader.lua:\n" .. err_str)
+    error(err_str)
+end

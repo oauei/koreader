@@ -76,16 +76,20 @@ local function isTvMode()
     if G_reader_settings and G_reader_settings:has("force_tv_mode") then
         return G_reader_settings:isTrue("force_tv_mode")
     end
-    return android.isTv()
+    if android.prop and android.prop.isTv ~= nil then
+        return android.prop.isTv
+    end
+    local ok, res = pcall(android.isTv)
+    return ok and res or false
 end
 
 local Device = Generic:extend{
     isAndroid = yes,
     model = android.prop.product,
     hasKeys = yes,
-    hasDPad = function() return isTvMode() end,
+    hasDPad = function(self) return isTvMode() end,
     hasFewKeys = no,
-    useDPadAsActionKeys = function() return isTvMode() end,
+    useDPadAsActionKeys = function(self) return isTvMode() end,
     supportsGamepad = yes,
     hasSeamlessWifiToggle = no, -- Requires losing focus to the sytem's network settings and user interaction
     hasExitOptions = no,
@@ -96,7 +100,13 @@ local Device = Generic:extend{
     canRestart = no,
     canSuspend = no,
     firmware_rev = android.app.activity.sdkVersion,
-    home_dir = android.getExternalStoragePath(),
+    home_dir = (function()
+        local ext = android.getExternalStoragePath()
+        if ext and lfs.attributes(ext, "mode") == "directory" then
+            return ext
+        end
+        return android.dir
+    end)(),
     display_dpi = android.lib.AConfiguration_getDensity(android.app.config),
     isHapticFeedbackEnabled = yes,
     isDefaultFullscreen = function() return android.app.activity.sdkVersion >= 19 end,

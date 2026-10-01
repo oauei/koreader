@@ -43,7 +43,16 @@ function DataStorage:getDataDir()
     end
     if lfs.attributes(data_dir, "mode") ~= "directory" then
         local ok, err = lfs.mkdir(data_dir)
-        if not ok then error(err .. " " .. data_dir) end
+        if not ok then
+            if isAndroid and android.dir then
+                data_dir = android.dir .. "/koreader"
+                if lfs.attributes(data_dir, "mode") ~= "directory" then
+                    lfs.mkdir(data_dir)
+                end
+            else
+                error(err .. " " .. data_dir)
+            end
+        end
     end
 
     return data_dir
