@@ -73,19 +73,24 @@ local external = require("device/thirdparty"):new{
 }
 
 local function isTvMode()
-    if G_reader_settings and G_reader_settings:has("force_tv_mode") then
+    if G_reader_settings and G_reader_settings.has and G_reader_settings:has("force_tv_mode") then
         return G_reader_settings:isTrue("force_tv_mode")
     end
-    if android.prop and android.prop.isTv ~= nil then
-        return android.prop.isTv
+    if type(android) == "table" then
+        if type(android.prop) == "table" and android.prop.isTv ~= nil then
+            return android.prop.isTv
+        end
+        if type(android.isTv) == "function" then
+            local ok, res = pcall(android.isTv)
+            return ok and (res == true)
+        end
     end
-    local ok, res = pcall(android.isTv)
-    return ok and res or false
+    return false
 end
 
 local Device = Generic:extend{
     isAndroid = yes,
-    model = android.prop.product,
+    model = (type(android) == "table" and android.prop and android.prop.product) or "android",
     hasKeys = yes,
     hasDPad = function(self) return isTvMode() end,
     hasFewKeys = no,
@@ -93,21 +98,21 @@ local Device = Generic:extend{
     supportsGamepad = yes,
     hasSeamlessWifiToggle = no, -- Requires losing focus to the sytem's network settings and user interaction
     hasExitOptions = no,
-    hasEinkScreen = function() return android.isEink() end,
-    hasColorScreen = android.isColorScreen() and yes or no,
-    hasFrontlight = android.hasLights,
-    hasNaturalLight = android.isWarmthDevice,
+    hasEinkScreen = function() return type(android) == "table" and type(android.isEink) == "function" and android.isEink() or false end,
+    hasColorScreen = (type(android) == "table" and type(android.isColorScreen) == "function" and android.isColorScreen()) and yes or no,
+    hasFrontlight = type(android) == "table" and android.hasLights or no,
+    hasNaturalLight = type(android) == "table" and android.isWarmthDevice or no,
     canRestart = no,
     canSuspend = no,
-    firmware_rev = android.app.activity.sdkVersion,
+    firmware_rev = (type(android) == "table" and android.app and android.app.activity and android.app.activity.sdkVersion) or 0,
     home_dir = (function()
-        local ext = android.getExternalStoragePath()
+        local ext = (type(android) == "table" and type(android.getExternalStoragePath) == "function") and android.getExternalStoragePath() or nil
         if ext and lfs.attributes(ext, "mode") == "directory" then
             return ext
         end
-        return android.dir
+        return (type(android) == "table" and android.dir) or "."
     end)(),
-    display_dpi = android.lib.AConfiguration_getDensity(android.app.config),
+    display_dpi = (type(android) == "table" and android.lib and android.app and android.lib.AConfiguration_getDensity and android.lib.AConfiguration_getDensity(android.app.config)) or 160,
     isHapticFeedbackEnabled = yes,
     isDefaultFullscreen = function() return android.app.activity.sdkVersion >= 19 end,
     hasClipboard = yes,
@@ -611,14 +616,21 @@ end
 
 -- todo: Wouldn't we like an android.deviceIdentifier() method, so we can use better default paths?
 function Device:getDefaultCoverPath()
-    if android.prop.product == "ntx_6sl" then -- Tolino HD4 and other
-        return android.getExternalStoragePath() .. "/suspend_others.jpg"
+    local ext = (type(android) == "table" and type(android.getExternalStoragePath) == "function") and android.getExternalStoragePath() or nil
+    local base = (ext and ext ~= "") and ext or ((type(android) == "table" and android.dir) or ".")
+    if type(android) == "table" and android.prop and android.prop.product == "ntx_6sl" then -- Tolino HD4 and other
+        return base .. "/suspend_others.jpg"
     else
-        return android.getExternalStoragePath() .. "/cover.jpg"
+        return base .. "/cover.jpg"
     end
 end
 
-android.LOGI(string.format("Android %s - %s (API %d) - flavor: %s",
-    android.prop.version, getCodename(), Device.firmware_rev, android.prop.flavor))
+if type(android) == "table" and type(android.LOGI) == "function" then
+    local version = (android.prop and android.prop.version) or "unknown"
+    local flavor = (android.prop and android.prop.flavor) or "unknown"
+    local fw_rev = Device.firmware_rev or 0
+    android.LOGI(string.format("Android %s - %s (API %d) - flavor: %s",
+        tostring(version), getCodename(), fw_rev, tostring(flavor)))
+end
 
 return Device

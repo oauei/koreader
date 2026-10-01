@@ -6,31 +6,52 @@ local T = require("ffi/util").template
 local UIManager = require("ui/uimanager")
 
 local function isForcedOn()
-    return G_reader_settings:readSetting("force_tv_mode") == true
+    return G_reader_settings and G_reader_settings:readSetting("force_tv_mode") == true
 end
 
 local function isForcedOff()
-    return G_reader_settings:readSetting("force_tv_mode") == false
+    return G_reader_settings and G_reader_settings:readSetting("force_tv_mode") == false
 end
 
 local function isAutoDetect()
-    return G_reader_settings:readSetting("force_tv_mode") == nil
+    return G_reader_settings and G_reader_settings:readSetting("force_tv_mode") == nil
 end
 
 local function setTvMode(val)
-    G_reader_settings:saveSetting("force_tv_mode", val)
+    if G_reader_settings then
+        G_reader_settings:saveSetting("force_tv_mode", val)
+    end
     UIManager:askForRestart(_("Projector / TV mode setting changed. Please restart KOReader for full keymap adjustments to take effect."))
 end
 
 local function setProjectorDPI(dpi_val, label)
-    G_reader_settings:saveSetting("screen_dpi", dpi_val)
-    Device:setScreenDPI(dpi_val)
-    UIManager:askForRestart(T(_("UI scaling set to %1 (%2 DPI). Restart KOReader to apply."), label, dpi_val))
+    if G_reader_settings then
+        G_reader_settings:saveSetting("screen_dpi", dpi_val)
+    end
+    if Device and Device.setScreenDPI then
+        Device:setScreenDPI(dpi_val)
+    end
+    local msg
+    if dpi_val then
+        msg = T(_("UI scaling set to %1 (%2 DPI). Restart KOReader to apply."), label, dpi_val)
+    else
+        msg = _("UI scaling reset to Auto / Default DPI. Restart KOReader to apply.")
+    end
+    UIManager:askForRestart(msg)
+end
+
+local function getRotationMode()
+    if Device and Device.screen and Device.screen.getRotationMode then
+        return Device.screen:getRotationMode()
+    end
+    return 0
 end
 
 local function setRotation(mode)
     UIManager:broadcastEvent(Event:new("SetRotationMode", mode))
-    G_reader_settings:saveSetting("fm_rotation_mode", mode)
+    if G_reader_settings then
+        G_reader_settings:saveSetting("fm_rotation_mode", mode)
+    end
 end
 
 return {
@@ -72,10 +93,12 @@ return {
                     text = _("Left/Right D-Pad turns pages in reader"),
                     help_text = _("When checked, D-Pad Left and Right buttons turn pages in documents instead of jumping chapters."),
                     checked_func = function()
-                        return G_reader_settings:nilOrTrue("left_right_keys_turn_pages")
+                        return G_reader_settings and G_reader_settings:nilOrTrue("left_right_keys_turn_pages")
                     end,
                     callback = function()
-                        G_reader_settings:flipNilOrTrue("left_right_keys_turn_pages")
+                        if G_reader_settings then
+                            G_reader_settings:flipNilOrTrue("left_right_keys_turn_pages")
+                        end
                         UIManager:broadcastEvent(Event:new("ReRegisterKeyEvents"))
                     end,
                 },
@@ -100,31 +123,31 @@ return {
             sub_item_table = {
                 {
                     text = _("Auto / Default DPI"),
-                    checked_func = function() return G_reader_settings:readSetting("screen_dpi") == nil end,
+                    checked_func = function() return not G_reader_settings or G_reader_settings:readSetting("screen_dpi") == nil end,
                     radio = true,
                     callback = function() setProjectorDPI(nil, _("Auto")) end,
                 },
                 {
                     text = _("Medium Distance (240 DPI)"),
-                    checked_func = function() return G_reader_settings:readSetting("screen_dpi") == 240 end,
+                    checked_func = function() return G_reader_settings and G_reader_settings:readSetting("screen_dpi") == 240 end,
                     radio = true,
                     callback = function() setProjectorDPI(240, _("Medium Distance")) end,
                 },
                 {
                     text = _("Large / Projector Standard (320 DPI)"),
-                    checked_func = function() return G_reader_settings:readSetting("screen_dpi") == 320 end,
+                    checked_func = function() return G_reader_settings and G_reader_settings:readSetting("screen_dpi") == 320 end,
                     radio = true,
                     callback = function() setProjectorDPI(320, _("Projector Standard")) end,
                 },
                 {
                     text = _("Extra Large / Far Distance (400 DPI)"),
-                    checked_func = function() return G_reader_settings:readSetting("screen_dpi") == 400 end,
+                    checked_func = function() return G_reader_settings and G_reader_settings:readSetting("screen_dpi") == 400 end,
                     radio = true,
                     callback = function() setProjectorDPI(400, _("Far Distance")) end,
                 },
                 {
                     text = _("Ultra Large (480 DPI)"),
-                    checked_func = function() return G_reader_settings:readSetting("screen_dpi") == 480 end,
+                    checked_func = function() return G_reader_settings and G_reader_settings:readSetting("screen_dpi") == 480 end,
                     radio = true,
                     callback = function() setProjectorDPI(480, _("Ultra Large")) end,
                 },
@@ -137,25 +160,25 @@ return {
             sub_item_table = {
                 {
                     text = _("Landscape Upright (0°)"),
-                    checked_func = function() return Screen:getRotationMode() == 0 end,
+                    checked_func = function() return getRotationMode() == 0 end,
                     radio = true,
                     callback = function() setRotation(0) end,
                 },
                 {
                     text = _("Vertical Wall (90° Clockwise)"),
-                    checked_func = function() return Screen:getRotationMode() == 1 end,
+                    checked_func = function() return getRotationMode() == 1 end,
                     radio = true,
                     callback = function() setRotation(1) end,
                 },
                 {
                     text = _("Ceiling Mount (180° Inverted)"),
-                    checked_func = function() return Screen:getRotationMode() == 2 end,
+                    checked_func = function() return getRotationMode() == 2 end,
                     radio = true,
                     callback = function() setRotation(2) end,
                 },
                 {
                     text = _("Vertical Wall (270° Counter-Clockwise)"),
-                    checked_func = function() return Screen:getRotationMode() == 3 end,
+                    checked_func = function() return getRotationMode() == 3 end,
                     radio = true,
                     callback = function() setRotation(3) end,
                 },

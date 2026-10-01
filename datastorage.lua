@@ -19,7 +19,14 @@ function DataStorage:getDataDir()
     if os.getenv("KO_HOME") then
         data_dir = os.getenv("KO_HOME")
     elseif isAndroid then
-        data_dir = android.getExternalStoragePath() .. "/koreader"
+        local ext_path = (type(android) == "table" and type(android.getExternalStoragePath) == "function") and android.getExternalStoragePath() or nil
+        if ext_path and ext_path ~= "" then
+            data_dir = ext_path .. "/koreader"
+        elseif type(android) == "table" and android.dir then
+            data_dir = android.dir .. "/koreader"
+        else
+            data_dir = "./koreader"
+        end
     elseif os.getenv("UBUNTU_APPLICATION_ISOLATION") then
         local app_id = os.getenv("APP_ID")
         local package_name = app_id:match("^(.-)_")
@@ -44,13 +51,16 @@ function DataStorage:getDataDir()
     if lfs.attributes(data_dir, "mode") ~= "directory" then
         local ok, err = lfs.mkdir(data_dir)
         if not ok then
-            if isAndroid and android.dir then
+            if isAndroid and type(android) == "table" and android.dir then
                 data_dir = android.dir .. "/koreader"
                 if lfs.attributes(data_dir, "mode") ~= "directory" then
-                    lfs.mkdir(data_dir)
+                    local ok2, _ = lfs.mkdir(data_dir)
+                    if not ok2 then
+                        data_dir = android.dir
+                    end
                 end
             else
-                error(err .. " " .. data_dir)
+                error((err or "cannot create directory") .. " " .. tostring(data_dir))
             end
         end
     end

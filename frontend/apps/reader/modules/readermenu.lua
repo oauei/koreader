@@ -504,7 +504,11 @@ function ReaderMenu:onTapShowMenu(ges)
 end
 
 function ReaderMenu:onPressMenu()
-    if G_reader_settings:nilOrTrue("show_bottom_menu") then
+    if self.menu_container then
+        self:onTapCloseMenu()
+        return true
+    end
+    if G_reader_settings and G_reader_settings:nilOrTrue("show_bottom_menu") then
         self.ui:handleEvent(Event:new("ShowConfigMenu"))
     end
     self:onShowMenu()
@@ -512,6 +516,10 @@ function ReaderMenu:onPressMenu()
 end
 
 function ReaderMenu:onKeyPressShowMenu(_, key_ev)
+    if self.menu_container then
+        self:onTapCloseMenu()
+        return true
+    end
     return self:onShowMenu()
 end
 

@@ -15,9 +15,10 @@ function Version:getCurrentRevision()
             self.rev = rev_file:read("*line")
             rev_file:close()
         end
-        -- sanity check in case `git describe` failed
-        if self.rev == "fatal: No names found, cannot describe anything." then
-            self.rev = nil
+        -- sanity check in case `git describe` failed or file is empty
+        if not self.rev or self.rev == "" or self.rev:find("fatal") then
+            local ok_android = pcall(require, "android")
+            self.rev = "v2024.11-custom" .. (ok_android and "_android" or "")
         end
     end
     return self.rev
@@ -64,6 +65,10 @@ function Version:getShortVersion()
         local rev = self:getCurrentRevision()
         if (not rev or rev == "") then return "unknown" end
         local year, month, point, revision = rev:match("v(%d%d%d%d)%.(%d%d)%.?(%d?%d?)-?(%d*)")
+        if not year or not month then
+            self.short = rev
+            return self.short
+        end
         self.short = year .. "." .. month
         if point and point ~= "" then
             self.short = self.short .. "." .. point

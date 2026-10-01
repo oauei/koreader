@@ -18,6 +18,10 @@ local function probeDevice()
             return require("device/remarkable/device")
         end
     end
+    local ok_android = pcall(require, "android")
+    if ok_android then
+        return require("device/android/device")
+    end
     if util.loadSDL3() then
         return require("device/sdl/device")
     end
