@@ -57,10 +57,10 @@ function ReaderPaging:registerKeyEvents()
         next_key, prev_key = prev_key, next_key
     end
     if Device:hasDPad() and Device:useDPadAsActionKeys() then
-        if G_reader_settings:isTrue("left_right_keys_turn_pages") then
+        if G_reader_settings:nilOrTrue("left_right_keys_turn_pages") then
             self.key_events.GotoNextPage = { { { "RPgFwd", "LPgFwd", next_key, " " } }, event = "GotoViewRel", args = 1, }
             self.key_events.GotoPrevPage = { { { "RPgBack", "LPgBack", prev_key } }, event = "GotoViewRel", args = -1, }
-        elseif G_reader_settings:nilOrFalse("left_right_keys_turn_pages") then
+        else
             self.key_events.GotoNextChapter = { { next_key }, event = "GotoNextChapter", args = 1, }
             self.key_events.GotoPrevChapter = { { prev_key }, event = "GotoPrevChapter", args = -1, }
             self.key_events.GotoNextPage = { { { "RPgFwd", "LPgFwd", " " } }, event = "GotoViewRel", args = 1, }

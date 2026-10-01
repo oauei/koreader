@@ -8,7 +8,7 @@ return {
 
     [4] = "Back",   -- BACK
     [19] = "Up",    -- DPAD_UP
-    [20] = "Down",  -- DPAD_UP
+    [20] = "Down",  -- DPAD_DOWN
     [21] = "Left",  -- DPAD_LEFT
     [22] = "Right", -- DPAD_RIGHT
     [23] = "Press", -- DPAD_CENTER
@@ -24,7 +24,23 @@ return {
     [67] = "Del",   -- DEL
     [76] = "/",     -- SLASH
     [82] = "Menu",  -- MENU
-    [84] = "Search",--SEARCH
+    [84] = "Search",-- SEARCH
+    [85] = "Press", -- MEDIA_PLAY_PAUSE
+    [86] = "Back",  -- MEDIA_STOP
+    [87] = "LPgFwd",-- MEDIA_NEXT
+    [88] = "LPgBack",-- MEDIA_PREVIOUS
+    [89] = "LPgBack",-- MEDIA_REWIND
+    [90] = "LPgFwd", -- MEDIA_FAST_FORWARD
     [92] = "LPgBack", -- PAGE_UP
     [93] = "LPgFwd",  -- PAGE_DOWN
+    [96] = "Press", -- BUTTON_A
+    [97] = "Back",  -- BUTTON_B
+    [99] = "Menu",  -- BUTTON_X
+    [100] = "Search",-- BUTTON_Y
+    [111] = "Back",  -- ESCAPE
+    [126] = "Press", -- MEDIA_PLAY
+    [127] = "Press", -- MEDIA_PAUSE
+    [160] = "Press", -- NUMPAD_ENTER
+    [166] = "LPgBack", -- CHANNEL_UP
+    [167] = "LPgFwd",  -- CHANNEL_DOWN
 }

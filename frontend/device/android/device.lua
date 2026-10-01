@@ -72,11 +72,21 @@ local external = require("device/thirdparty"):new{
     end,
 }
 
+local function isTvMode()
+    if G_reader_settings and G_reader_settings:has("force_tv_mode") then
+        return G_reader_settings:isTrue("force_tv_mode")
+    end
+    return android.isTv()
+end
+
 local Device = Generic:extend{
     isAndroid = yes,
     model = android.prop.product,
     hasKeys = yes,
-    hasDPad = no,
+    hasDPad = function() return isTvMode() end,
+    hasFewKeys = no,
+    useDPadAsActionKeys = function() return isTvMode() end,
+    supportsGamepad = yes,
     hasSeamlessWifiToggle = no, -- Requires losing focus to the sytem's network settings and user interaction
     hasExitOptions = no,
     hasEinkScreen = function() return android.isEink() end,

@@ -1,0 +1,27 @@
+name: Smart Projector APK Build
+
+permissions:
+  contents: write
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "smart-projector-tv"
+      - "master"
+      - "main"
+    tags:
+      - "v*"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build Projector APKs (ARM32 + ARM64)
+    uses: ./.github/workflows/build.yml
+    with:
+      artifacts: true
+      fail_fast: false
+      jobs: projector

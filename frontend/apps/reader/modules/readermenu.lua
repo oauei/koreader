@@ -36,14 +36,18 @@ function ReaderMenu:onGesture() end
 
 function ReaderMenu:registerKeyEvents()
     if Device:hasKeys() then
+        local menu_keys = { "Menu" }
+        if Device:hasDPad() then
+            table.insert(menu_keys, "Press")
+        end
         if Device:isTouchDevice() then
-            self.key_events.PressMenu = { { "Menu" } }
+            self.key_events.PressMenu = { { menu_keys } }
             if Device:hasFewKeys() then
                 self.key_events.PressMenu = { { { "Menu", "Right" } } }
             end
         else
             -- Map Menu key to top menu only, because the bottom menu is only designed for touch devices.
-            self.key_events.KeyPressShowMenu = { { "Menu" } }
+            self.key_events.KeyPressShowMenu = { { menu_keys } }
             if Device:hasFewKeys() then
                 self.key_events.KeyPressShowMenu = { { { "Menu", "Right" } } }
             end

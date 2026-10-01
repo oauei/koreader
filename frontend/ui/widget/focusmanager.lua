@@ -394,8 +394,8 @@ end
 FocusManager.NOT_UNFOCUS = 1
 -- do not send a Focus event
 FocusManager.NOT_FOCUS = 2
--- In some cases, we may only want to send Focus events on non-Touch devices
-FocusManager.FOCUS_ONLY_ON_NT = (Device:hasDPad() and not Device:isTouchDevice()) and 0 or FocusManager.NOT_FOCUS
+-- In some cases, we may only want to send Focus events on non-Touch devices (or when D-Pad is active)
+FocusManager.FOCUS_ONLY_ON_NT = Device:hasDPad() and 0 or FocusManager.NOT_FOCUS
 -- And in some cases, we may want to send both events *regardless* of heuristics or device caps
 FocusManager.FORCED_FOCUS = 4
 
@@ -421,8 +421,8 @@ function FocusManager:moveFocusTo(x, y, focus_flags)
         self.selected.y = y
         -- widget create new layout on update, previous may be removed from new layout.
         if bit.band(focus_flags, FocusManager.FORCED_FOCUS) == FocusManager.FORCED_FOCUS or Device:hasDPad() then
-            -- If FORCED_FOCUS was requested, we want *all* the events: mask out both NOT_ bits
-            if bit.band(focus_flags, FocusManager.FORCED_FOCUS) == FocusManager.FORCED_FOCUS then
+            -- If FORCED_FOCUS was requested or D-Pad is active, we want *all* the events: mask out both NOT_ bits
+            if bit.band(focus_flags, FocusManager.FORCED_FOCUS) == FocusManager.FORCED_FOCUS or Device:hasDPad() then
                 focus_flags = bit.band(focus_flags, bit.bnot(bit.bor(FocusManager.NOT_UNFOCUS, FocusManager.NOT_FOCUS)))
             end
             if bit.band(focus_flags, FocusManager.NOT_UNFOCUS) ~= FocusManager.NOT_UNFOCUS then
