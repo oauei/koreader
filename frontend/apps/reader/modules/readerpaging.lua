@@ -66,6 +66,8 @@ function ReaderPaging:registerKeyEvents()
             self.key_events.GotoNextPage = { { { "RPgFwd", "LPgFwd", " " } }, event = "GotoViewRel", args = 1, }
             self.key_events.GotoPrevPage = { { { "RPgBack", "LPgBack" } }, event = "GotoViewRel", args = -1, }
         end
+        self.key_events.GotoNextPos = { { "Down" }, event = "GotoPosRel", args = 1, }
+        self.key_events.GotoPrevPos = { { "Up" }, event = "GotoPosRel", args = -1, }
     elseif Device:hasKeys() then
         self.key_events.GotoNextPage = { { { "RPgFwd", "LPgFwd", not Device:hasFewKeys() and next_key } }, event = "GotoViewRel", args = 1, }
         self.key_events.GotoPrevPage = { { { "RPgBack", "LPgBack", not Device:hasFewKeys() and prev_key } }, event = "GotoViewRel", args = -1, }

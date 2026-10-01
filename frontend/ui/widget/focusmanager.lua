@@ -278,9 +278,63 @@ function FocusManager:onFocusMove(args)
         logger.dbg("FocusManager: no currently selected widget found")
         return true
     end
+
+    -- Remote D-Pad / Smart Projector pagination:
+    -- When moving horizontally (Left/Right) at a boundary in a paginated view (e.g. Menu, FileChooser, TouchMenu, KeyValuePage),
+    -- turn the page or switch tabs if there is no horizontal neighbor on the current row.
+    if dx ~= 0 and dy == 0 then
+        local target_x = self.selected.x + dx
+        local has_horizontal_neighbor = self.layout[self.selected.y] and self.layout[self.selected.y][target_x] ~= nil
+        if not has_horizontal_neighbor then
+            local has_next = (self.page and self.page_num and (self.page < self.page_num or (self.tab_item_table and self.cur_tab and self.cur_tab < #self.tab_item_table)))
+                          or (self.show_page and self.pages and self.show_page < self.pages)
+            local has_prev = (self.page and self.page_num and (self.page > 1 or (self.tab_item_table and self.cur_tab and self.cur_tab > 1)))
+                          or (self.show_page and self.pages and self.show_page > 1)
+                          or (self.item_table_stack and #self.item_table_stack > 0)
+
+            if dx > 0 and self.onNextPage and has_next then
+                if self:onNextPage() then
+                    return true
+                end
+            elseif dx < 0 and self.onPrevPage and has_prev then
+                if self:onPrevPage() then
+                    return true
+                end
+            end
+        end
+    end
+
     local current_item = self.layout[self.selected.y][self.selected.x]
     while true do
         if not self.layout[self.selected.y + dy] then
+            -- Reached vertical boundary (top or bottom edge of current layout)
+            if dy > 0 and self.onNextPage then
+                local has_next = (self.page and self.page_num and self.page < self.page_num)
+                              or (self.show_page and self.pages and self.show_page < self.pages)
+                if has_next then
+                    if self:onNextPage() then
+                        return true
+                    end
+                end
+            elseif dy < 0 and self.onPrevPage then
+                local has_prev = (self.page and self.page_num and self.page > 1)
+                              or (self.show_page and self.pages and self.show_page > 1)
+                if has_prev then
+                    if self:onPrevPage() then
+                        if self.layout and #self.layout > 0 then
+                            local target_y = #self.layout
+                            local target_x = self.selected.x or 1
+                            if not (self.layout[target_y] and self.layout[target_y][target_x]) then
+                                for x, item in pairs(self.layout[target_y]) do
+                                    if item then target_x = x break end
+                                end
+                            end
+                            self:moveFocusTo(target_x, target_y, FocusManager.FORCED_FOCUS)
+                        end
+                        return true
+                    end
+                end
+            end
             --horizontal border, try to wraparound
             if not self:_wrapAroundY(dy) then
                 break

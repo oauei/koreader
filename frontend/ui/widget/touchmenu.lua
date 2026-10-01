@@ -813,11 +813,34 @@ function TouchMenu:onBack()
 end
 
 function TouchMenu:onNextPage()
-    return self:onGotoPage(self.page + 1)
+    if self.page < self.page_num then
+        return self:onGotoPage(self.page + 1)
+    elseif self.bar and self.bar.icon_widgets and self.cur_tab and self.cur_tab < #self.tab_item_table then
+        local next_tab = self.cur_tab + 1
+        if self.bar.icon_widgets[next_tab] and self.bar.icon_widgets[next_tab].callback then
+            self.bar.icon_widgets[next_tab].callback()
+            return true
+        end
+    else
+        return self:onGotoPage(1)
+    end
 end
 
 function TouchMenu:onPrevPage()
-    return self:onGotoPage(self.page - 1)
+    if self.page > 1 then
+        return self:onGotoPage(self.page - 1)
+    elseif self.item_table_stack and #self.item_table_stack > 0 then
+        self:backToUpperMenu()
+        return true
+    elseif self.bar and self.bar.icon_widgets and self.cur_tab and self.cur_tab > 1 then
+        local prev_tab = self.cur_tab - 1
+        if self.bar.icon_widgets[prev_tab] and self.bar.icon_widgets[prev_tab].callback then
+            self.bar.icon_widgets[prev_tab].callback()
+            return true
+        end
+    else
+        return self:onGotoPage(self.page_num)
+    end
 end
 
 function TouchMenu:onFirstPage()
